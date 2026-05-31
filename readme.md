@@ -1,5 +1,8 @@
-# Lisiä mitä tulee mieleen
+# Backlog
+- kokoonpano ja kenttäkuva olisivat vierekkäin; kokoonpano vasemmalla puolella. 
+- näytä koko nimi olisi oletus, sukunimi sitten valintana
 - voi ottaa kuvan / lähettää eteenpäin kokoonpanosta
+
 # Kokoonpanoavustaja
 Ohje agentille:
 > lue readme.md, analysoi ja ehdota toteutus. Parempi palastella pieniä toteutuksia alkuun, mutta huomioida laajennettavuus esim vältä syväkoodattuja arvoja vaan mahdollista joustava päivittäminen
