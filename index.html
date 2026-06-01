@@ -292,9 +292,10 @@ function getMukana()   { return getFiltered().filter(p => state.status[pid(p)] =
 function getOnField()  { return getMukana().filter(p => !state.lineup[pid(p)].isSubstitute); }
 function getSubs()     { return getMukana().filter(p =>  state.lineup[pid(p)].isSubstitute); }
 
-// Assign default x/y to players that don't have one yet
+// Assign default x/y to players that don't have one yet, then resolve collisions
 function ensurePositions(players) {
   const byPos = {};
+  const newPids = new Set();
   players.forEach(p => { const pos = state.lineup[pid(p)].position; (byPos[pos] = byPos[pos] || []).push(p); });
   Object.entries(byPos).forEach(([pos, group]) => {
     const y = POS_Y[pos] ?? 50;
@@ -302,13 +303,64 @@ function ensurePositions(players) {
     const margin = 18;
     group.forEach((p, i) => {
       if (state.lineup[pid(p)].x === null) {
-        // MV aina keskellä maalin kohdalla
         const x = pos === 'mv' ? 50 : (n === 1 ? 50 : margin + ((100 - 2 * margin) / (n - 1)) * i);
         state.lineup[pid(p)].x = Math.round(x);
         state.lineup[pid(p)].y = y;
+        newPids.add(pid(p));
       }
     });
   });
+  if (newPids.size > 0) resolveCollisions(players, newPids);
+}
+
+// Siirrä vain uusia pelaajia (freeSet) pois päällekkäisyyksistä.
+// Jo manuaalisesti sijoitetut pelaajat pysyvät paikallaan.
+function resolveCollisions(allPlayers, freeSet) {
+  const FW = 300, FH = 320;
+  const MIN_DIST = 44;   // minimietäisyys px (pelaajapiirien välillä)
+  const MARGIN = 8;      // px kentän reunasta
+  const ITERS = 30;
+  const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+  const toPct = (px, dim) => px / dim * 100;
+
+  for (let iter = 0; iter < ITERS; iter++) {
+    let moved = false;
+    for (let i = 0; i < allPlayers.length; i++) {
+      for (let j = i + 1; j < allPlayers.length; j++) {
+        const idA = pid(allPlayers[i]), idB = pid(allPlayers[j]);
+        const freeA = freeSet.has(idA), freeB = freeSet.has(idB);
+        if (!freeA && !freeB) continue; // molemmat lukittu → ei tarvita
+
+        const a = state.lineup[idA], b = state.lineup[idB];
+        const ax = a.x/100*FW, ay = a.y/100*FH;
+        const bx = b.x/100*FW, by = b.y/100*FH;
+        const dx = bx - ax, dy = by - ay;
+        const d = Math.hypot(dx, dy);
+        if (d >= MIN_DIST || d < 0.1) continue;
+
+        const nx = dx / d, ny = dy / d;
+        const overlap = MIN_DIST - d;
+        moved = true;
+
+        if (freeA && freeB) {
+          const push = overlap / 2 + 0.5;
+          a.x = clamp(toPct(ax - nx*push, FW), toPct(MARGIN, FW), toPct(FW-MARGIN, FW));
+          a.y = clamp(toPct(ay - ny*push, FH), toPct(MARGIN, FH), toPct(FH-MARGIN, FH));
+          b.x = clamp(toPct(bx + nx*push, FW), toPct(MARGIN, FW), toPct(FW-MARGIN, FW));
+          b.y = clamp(toPct(by + ny*push, FH), toPct(MARGIN, FH), toPct(FH-MARGIN, FH));
+        } else if (freeA) {
+          const push = overlap + 0.5;
+          a.x = clamp(toPct(ax - nx*push, FW), toPct(MARGIN, FW), toPct(FW-MARGIN, FW));
+          a.y = clamp(toPct(ay - ny*push, FH), toPct(MARGIN, FH), toPct(FH-MARGIN, FH));
+        } else {
+          const push = overlap + 0.5;
+          b.x = clamp(toPct(bx + nx*push, FW), toPct(MARGIN, FW), toPct(FW-MARGIN, FW));
+          b.y = clamp(toPct(by + ny*push, FH), toPct(MARGIN, FH), toPct(FH-MARGIN, FH));
+        }
+      }
+    }
+    if (!moved) break;
+  }
 }
 
 // ── Dynamic team CSS (avoids hardcoding team names in CSS) ───────
