@@ -1,7 +1,21 @@
 # Backlog
-- kokoonpano ja kenttäkuva olisivat vierekkäin; kokoonpano vasemmalla puolella. 
-- näytä koko nimi olisi oletus, sukunimi sitten valintana
-- voi ottaa kuvan / lähettää eteenpäin kokoonpanosta
+- [ ] kokoonpano ja kenttäkuva olisivat vierekkäin; kokoonpano vasemmalla puolella. 
+- [ ] kenttäkuvassa näytä koko nimi olisi oletus, sukunimi sitten valintana erikseen
+- [ ] voi ottaa kuvan ja lähettää sen eteenpäin kokoonpanosta tai muuten jakaa tämän helposti
+
+# Julkaisu
+```bash
+git add index.html players.js readme.md
+git commit -m "Initial commit"
+git remote add origin https://github.com/AnaHill/kokoonpano_avustaja.git
+git push -u origin master
+# git jättää paikalliset muutokset huomiotta vaikka tiedosto on repossa.
+git update-index --skip-worktree players.js
+
+# jos haluat takaisin trackattavaksi
+git update-index --no-skip-worktree players.js
+
+```
 
 # Kokoonpanoavustaja
 Ohje agentille:

@@ -15,8 +15,10 @@
 
     /* Layout */
     #s1 { margin-bottom: 12px; }
-    .s23 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; align-items: start; }
-    @media (max-width: 640px) { .s23 { grid-template-columns: 1fr; } }
+    #s2 { margin-bottom: 12px; }
+    .s34 { display: flex; gap: 12px; align-items: start; flex-wrap: wrap; }
+    .s34-lineup { width: 270px; flex-shrink: 0; }
+    .s34-field  { flex: 1; min-width: 300px; }
 
     /* Team selector */
     .team-selector { display: flex; gap: 8px; flex-wrap: wrap; }
@@ -106,22 +108,22 @@
   <div class="team-selector" id="team-selector"></div>
 </div>
 
-<div class="s23">
-  <!-- Section 2 -->
-  <div class="card">
-    <div class="card-title">Pelaajat</div>
-    <div class="toolbar">
-      <button class="btn btn-all" onclick="selectAll()">Lisää kaikki kokoonpanoon</button>
-      <span class="count" id="count"></span>
-    </div>
-    <table>
-      <thead><tr><th>#</th><th>Nimi</th><th>Paikka</th><th>Joukkue</th><th>Tila</th><th></th></tr></thead>
-      <tbody id="player-list"></tbody>
-    </table>
+<!-- Section 2: Pelaajalistaus (täysleveys) -->
+<div class="card" id="s2">
+  <div class="card-title">Pelaajat</div>
+  <div class="toolbar">
+    <button class="btn btn-all" onclick="selectAll()">Lisää kaikki kokoonpanoon</button>
+    <span class="count" id="count"></span>
   </div>
+  <table>
+    <thead><tr><th>#</th><th>Nimi</th><th>Paikka</th><th>Joukkue</th><th>Tila</th><th></th></tr></thead>
+    <tbody id="player-list"></tbody>
+  </table>
+</div>
 
-  <!-- Section 3 -->
-  <div class="card">
+<div class="s34">
+  <!-- Section 3: Kokoonpano -->
+  <div class="card s34-lineup">
     <div class="card-title">Kokoonpano</div>
     <table class="lineup-table">
       <thead><tr><th>#</th><th>Nimi</th><th>Pelipaikka</th><th></th></tr></thead>
@@ -132,15 +134,17 @@
       <div class="bench-chips" id="bench-list"></div>
     </div>
   </div>
-</div>
 
-<!-- Section 4 -->
-<div class="card">
-  <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-    <span class="card-title" style="margin:0">Kenttäkuva <small style="color:#ccc;font-weight:400;text-transform:none;letter-spacing:0">— vedä pelaajia kentällä</small></span>
-    <button id="name-toggle" class="btn" style="background:#f0f2f5;border-color:#ddd;color:#555;margin-left:auto" onclick="toggleNameStyle()">Näytä koko nimi</button>
-  </div>
-  <div class="field-and-bench">
+  <!-- Section 4: Kenttäkuva -->
+  <div class="card s34-field">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+      <span class="card-title" style="margin:0">Kenttäkuva <small style="color:#ccc;font-weight:400;text-transform:none;letter-spacing:0">— vedä pelaajia</small></span>
+      <div style="margin-left:auto;display:flex;gap:6px">
+        <button id="screenshot-btn" class="btn" style="background:#e8f0fe;border-color:#4a90d9;color:#1a5db0" onclick="copyFieldImage()">Kopioi kuva</button>
+        <button id="name-toggle" class="btn" style="background:#f0f2f5;border-color:#ddd;color:#555" onclick="toggleNameStyle()">Näytä sukunimi</button>
+      </div>
+    </div>
+    <div class="field-and-bench" id="field-capture-area">
     <div class="field" id="field">
       <!-- Puolikenttä: keskilinja ylhäällä, oma maali alhaalla -->
       <svg class="field-svg" viewBox="0 0 400 270" xmlns="http://www.w3.org/2000/svg">
@@ -172,6 +176,7 @@
       <div id="field-bench-chips"></div>
     </div>
   </div>
+</div>
 </div>
 
 <script>
@@ -216,7 +221,7 @@ function nameHtml(name) {
 // ── State ────────────────────────────────────────────────────────
 const state = {
   team: 'kaikki',
-  nameStyle: 'last', // 'last' | 'full'
+  nameStyle: 'full', // 'full' | 'last'
   status:  Object.fromEntries(PLAYERS.map(p => [pid(p), 'mukana'])),
   lineup:  Object.fromEntries(PLAYERS.map(p => [pid(p), { position: p.position, isSubstitute: false, x: null, y: null }])),
 };
@@ -226,9 +231,55 @@ function displayName(name) {
 }
 
 function toggleNameStyle() {
-  state.nameStyle = state.nameStyle === 'last' ? 'full' : 'last';
+  state.nameStyle = state.nameStyle === 'full' ? 'last' : 'full';
   document.getElementById('name-toggle').textContent = state.nameStyle === 'full' ? 'Näytä sukunimi' : 'Näytä koko nimi';
   renderField();
+}
+
+async function copyFieldImage() {
+  const btn = document.getElementById('screenshot-btn');
+  const orig = btn.textContent;
+  btn.textContent = 'Ladataan...';
+  btn.disabled = true;
+  try {
+    if (!window.html2canvas) {
+      await new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = 'https://unpkg.com/html2canvas@1.4.1/dist/html2canvas.min.js';
+        s.onload = resolve;
+        s.onerror = reject;
+        document.head.appendChild(s);
+      });
+    }
+    const canvas = await html2canvas(document.getElementById('field-capture-area'), {
+      backgroundColor: '#ffffff',
+      scale: 2,
+      useCORS: true,
+    });
+    btn.textContent = 'Kopioidaan...';
+    try {
+      await new Promise((res, rej) => canvas.toBlob(async blob => {
+        try {
+          await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+          res();
+        } catch (e) { rej(e); }
+      }));
+      btn.textContent = 'Kopioitu ✓';
+      setTimeout(() => { btn.textContent = orig; btn.disabled = false; }, 2000);
+    } catch {
+      // Fallback: avaa uudessa välilehdessä → oikeaklikkaa → Kopioi kuva
+      const w = window.open('', '_blank');
+      w.document.write(`<body style="margin:0;background:#fff">
+        <p style="font-family:sans-serif;padding:8px;color:#555">Oikeaklikkaa kuvaa → <strong>Kopioi kuva</strong></p>
+        <img src="${canvas.toDataURL()}" style="display:block;max-width:100%">
+      </body>`);
+      btn.textContent = orig;
+      btn.disabled = false;
+    }
+  } catch {
+    btn.textContent = 'Ei onnistunut';
+    setTimeout(() => { btn.textContent = orig; btn.disabled = false; }, 2500);
+  }
 }
 
 function getFiltered() { return PLAYERS.filter(p => state.team === 'kaikki' || p.team === state.team); }
