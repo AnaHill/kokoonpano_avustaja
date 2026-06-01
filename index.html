@@ -17,8 +17,8 @@
     #s1 { margin-bottom: 12px; }
     #s2 { margin-bottom: 12px; }
     .s34 { display: flex; gap: 12px; align-items: start; flex-wrap: wrap; }
-    .s34-lineup { width: 270px; flex-shrink: 0; }
-    .s34-field  { flex: 1; min-width: 300px; }
+    .s34-lineup { flex: 1; min-width: 240px; }
+    .s34-field  { flex: 0 0 auto; }
 
     /* Team selector */
     .team-selector { display: flex; gap: 8px; flex-wrap: wrap; }
@@ -57,7 +57,7 @@
     .abtn-vaihto:hover { background: #ffc107; color: #333; }
 
     /* Section 3 */
-    .lineup-table select { padding: 3px 5px; border: 1px solid #ddd; border-radius: 4px; font-size: 0.75rem; background: white; cursor: pointer; max-width: 120px; }
+    .lineup-table select { padding: 3px 4px; border: 1px solid #ddd; border-radius: 4px; font-size: 0.72rem; background: white; cursor: pointer; max-width: 105px; }
     .bench-section { margin-top: 10px; padding-top: 10px; border-top: 1px solid #f0f0f0; }
     .bench-title { font-size: 0.7rem; color: #aaa; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
     .bench-chips { display: flex; flex-wrap: wrap; gap: 5px; }
@@ -66,9 +66,9 @@
     .lineup-empty { font-size: 0.82rem; color: #bbb; padding: 16px 0; text-align: center; }
 
     /* Section 4: Field */
-    .field-and-bench { display: flex; gap: 14px; align-items: flex-start; justify-content: center; flex-wrap: wrap; }
+    .field-and-bench { display: flex; gap: 14px; align-items: flex-start; flex-wrap: wrap; }
     .field {
-      position: relative; width: 400px; height: 270px;
+      position: relative; width: 300px; height: 210px;
       background: linear-gradient(180deg, #2e8f36 0%, #2a7a30 100%);
       border-radius: 4px; overflow: hidden; border: 3px solid #1a5c22;
       user-select: none; touch-action: none; flex-shrink: 0;
