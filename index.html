@@ -104,7 +104,10 @@
 
 <!-- Section 1 -->
 <div class="card" id="s1">
-  <div class="card-title">Joukkue</div>
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+    <span class="card-title" style="margin:0">Joukkue</span>
+    <button class="btn" style="margin-left:auto;background:#fde8ea;border-color:#dc3545;color:#b02a37" onclick="clearState()">Uusi kokoonpano</button>
+  </div>
   <div class="team-selector" id="team-selector"></div>
 </div>
 
@@ -125,6 +128,7 @@
   <!-- Section 3: Kokoonpano -->
   <div class="card s34-lineup">
     <div class="card-title">Kokoonpano</div>
+    <div id="lineup-summary" style="font-size:0.75rem;color:#888;margin-bottom:8px;min-height:1em"></div>
     <table class="lineup-table">
       <thead><tr><th>#</th><th>Nimi</th><th>Pelipaikka</th><th></th></tr></thead>
       <tbody id="lineup-list"></tbody>
@@ -234,6 +238,7 @@ function toggleNameStyle() {
   state.nameStyle = state.nameStyle === 'full' ? 'last' : 'full';
   document.getElementById('name-toggle').textContent = state.nameStyle === 'full' ? 'Näytä sukunimi' : 'Näytä koko nimi';
   renderField();
+  saveState();
 }
 
 async function copyFieldImage() {
@@ -351,8 +356,25 @@ function renderPlayers() {
 }
 
 // ── Render: Section 3 ────────────────────────────────────────────
+function renderLineupSummary(starters, subs) {
+  const counts = {};
+  starters.forEach(p => {
+    const pos = state.lineup[pid(p)].position;
+    counts[pos] = (counts[pos] || 0) + 1;
+  });
+  const posStr = Object.entries(CONFIG.positions)
+    .filter(([k]) => counts[k])
+    .map(([k, v]) => `${v} ${counts[k]}`)
+    .join(' · ');
+  let text = `Kentällä: ${starters.length}`;
+  if (subs.length) text += ` (${subs.length} vaihto)`;
+  if (posStr) text += ' · ' + posStr;
+  document.getElementById('lineup-summary').textContent = starters.length ? text : '';
+}
+
 function renderLineup() {
   const starters = getOnField(), subs = getSubs();
+  renderLineupSummary(starters, subs);
   document.getElementById('lineup-list').innerHTML = starters.length === 0
     ? `<tr><td colspan="4" class="lineup-empty">Ei pelaajia kokoonpanossa</td></tr>`
     : starters.map(p => {
@@ -471,6 +493,47 @@ function endDrag(e) {
   }
   renderLineup();
   renderField();
+  saveState();
+}
+
+// ── Tallennus / lataus (localStorage) ───────────────────────────
+const STORAGE_KEY = 'koka_state';
+
+function saveState() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({
+    team: state.team,
+    nameStyle: state.nameStyle,
+    status: state.status,
+    lineup: state.lineup,
+  }));
+}
+
+function loadState() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+    if (!saved) return;
+    if (saved.team)      state.team      = saved.team;
+    if (saved.nameStyle) state.nameStyle = saved.nameStyle;
+    PLAYERS.forEach(p => {
+      const id = pid(p);
+      if (saved.status?.[id] !== undefined) state.status[id] = saved.status[id];
+      if (saved.lineup?.[id]) {
+        const s = saved.lineup[id];
+        state.lineup[id] = {
+          position:     s.position     ?? p.position,
+          isSubstitute: s.isSubstitute ?? false,
+          x: s.x ?? null,
+          y: s.y ?? null,
+        };
+      }
+    });
+  } catch {}
+}
+
+function clearState() {
+  if (!confirm('Aloitetaanko uusi kokoonpano? Nykyiset valinnat häviävät.')) return;
+  localStorage.removeItem(STORAGE_KEY);
+  location.reload();
 }
 
 // ── Actions ──────────────────────────────────────────────────────
@@ -479,33 +542,38 @@ function toggleStatus(id) {
   state.status[id] = goingOut ? 'poissa' : 'mukana';
   if (goingOut) { state.lineup[id].x = null; state.lineup[id].y = null; }
   renderPlayers(); renderLineup(); renderField();
+  saveState();
 }
 
 function changePos(id, pos) {
   state.lineup[id].position = pos;
   if (state.lineup[id].x !== null) {
     state.lineup[id].y = POS_Y[pos] ?? 50;
-    if (pos === 'mv') state.lineup[id].x = 50; // mv aina keskelle
+    if (pos === 'mv') state.lineup[id].x = 50;
   }
+  renderLineupSummary(getOnField(), getSubs());
   renderField();
+  saveState();
 }
 
 function moveToSub(id) {
   state.lineup[id].isSubstitute = true;
   state.lineup[id].x = null; state.lineup[id].y = null;
   renderLineup(); renderField();
+  saveState();
 }
 
 function moveToStarter(id) {
   state.lineup[id].isSubstitute = false;
   renderLineup(); renderField();
+  saveState();
 }
 
 function setTeam(team) {
   state.team = team;
-  // Nollaa kentän koordinaatit jotta sijoittelu lasketaan uudelleen oikealle joukkuejoukolle
   PLAYERS.forEach(p => { state.lineup[pid(p)].x = null; state.lineup[pid(p)].y = null; });
   renderTeams(); renderPlayers(); renderLineup(); renderField();
+  saveState();
 }
 
 function selectAll() {
@@ -517,9 +585,14 @@ function selectAll() {
     }
   });
   renderPlayers(); renderLineup(); renderField();
+  saveState();
 }
 
 // ── Init ─────────────────────────────────────────────────────────
+loadState();
+// Päivitä nimi-toggle-nappi ladatun tilan mukaan
+document.getElementById('name-toggle').textContent =
+  state.nameStyle === 'full' ? 'Näytä sukunimi' : 'Näytä koko nimi';
 renderTeams(); renderPlayers(); renderLineup(); renderField();
 </script>
 </body>

@@ -11,11 +11,13 @@ Selainpohjainen työkalu jalkapallojoukkueen kokoonpanon suunnitteluun. Toimii s
 
 ## Käyttö
 
-1. Valitse joukkue ylhäältä (esimerkkissä Vihreä / Keltainen / Kaikki, määritä `players.js` tiedostossa)
+1. Valitse joukkue ylhäältä (Vihreä / Keltainen / Kaikki — määritelty `players.js`:ssä)
 2. **Pelaajat**-listassa merkitse ketkä ovat paikalla — "Poista kokoonpanosta" / "Lisää kokoonpanoon"
 3. **Kokoonpano**-listassa vaihda pelipaikkoja tarvittaessa, tai merkitse pelaaja vaihtoon
 4. **Kenttäkuva** päivittyy automaattisesti — vedä pelaajia halutuille paikoille
 5. "Kopioi kuva" tallentaa kenttäkuvan leikepöydälle jaettavaksi (vaatii nettiyhteyden)
+
+**Tila tallentuu automaattisesti** selaimen muistiin — voit sulkea ja avata sivun uudelleen ilman että valinnat häviävät. "Uusi kokoonpano" -nappi tyhjentää tilan ja aloittaa alusta.
 
 ## Pelaajadatan muokkaus (`players.js`)
 
