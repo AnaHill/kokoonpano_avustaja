@@ -68,7 +68,7 @@
     /* Section 4: Field */
     .field-and-bench { display: flex; gap: 14px; align-items: flex-start; flex-wrap: wrap; }
     .field {
-      position: relative; width: 300px; height: 210px;
+      position: relative; width: 300px; height: 320px;
       background: linear-gradient(180deg, #2e8f36 0%, #2a7a30 100%);
       border-radius: 4px; overflow: hidden; border: 3px solid #1a5c22;
       user-select: none; touch-action: none; flex-shrink: 0;
@@ -146,29 +146,29 @@
     </div>
     <div class="field-and-bench" id="field-capture-area">
     <div class="field" id="field">
-      <!-- Puolikenttä: keskilinja ylhäällä, oma maali alhaalla -->
-      <svg class="field-svg" viewBox="0 0 400 270" xmlns="http://www.w3.org/2000/svg">
+      <!-- Puolikenttä: keskilinja ylhäällä, oma maali alhaalla. viewBox vastaa containeria 300×320 -->
+      <svg class="field-svg" viewBox="0 0 300 320" xmlns="http://www.w3.org/2000/svg">
         <!-- Kenttäraja -->
-        <rect x="10" y="10" width="380" height="250" fill="none" stroke="rgba(255,255,255,0.45)" stroke-width="1.5"/>
-        <!-- Keskilinja (yläraja toimii keskilinjana) -->
-        <line x1="10" y1="10" x2="390" y2="10" stroke="rgba(255,255,255,0.6)" stroke-width="2"/>
-        <!-- Keskiympyrä, puolikas -->
-        <path d="M148,10 A52,52 0 0 0 252,10" fill="none" stroke="rgba(255,255,255,0.45)" stroke-width="1.5"/>
-        <circle cx="200" cy="10" r="2.5" fill="rgba(255,255,255,0.5)"/>
-        <!-- Rangaistusalue -->
-        <rect x="80" y="183" width="240" height="77" fill="none" stroke="rgba(255,255,255,0.45)" stroke-width="1.5"/>
-        <!-- Maalialue -->
-        <rect x="140" y="234" width="120" height="26" fill="none" stroke="rgba(255,255,255,0.45)" stroke-width="1.5"/>
-        <!-- Rangaistuslaukkauspiste -->
-        <circle cx="200" cy="210" r="2" fill="rgba(255,255,255,0.4)"/>
-        <!-- Kulmakaarit (alaosa) -->
-        <path d="M16,260 A6,6 0 0 0 10,254" fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="1.2"/>
-        <path d="M390,254 A6,6 0 0 0 384,260" fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="1.2"/>
+        <rect x="10" y="10" width="280" height="300" fill="none" stroke="rgba(255,255,255,0.45)" stroke-width="1.5"/>
+        <!-- Keskilinja (yläraja = keskilinja) -->
+        <line x1="10" y1="10" x2="290" y2="10" stroke="rgba(255,255,255,0.6)" stroke-width="2"/>
+        <!-- Keskiympyrä, puolikas (r≈38 vastaa oikeaa mittasuhdetta) -->
+        <path d="M112,10 A38,38 0 0 0 188,10" fill="none" stroke="rgba(255,255,255,0.45)" stroke-width="1.5"/>
+        <circle cx="150" cy="10" r="2.5" fill="rgba(255,255,255,0.5)"/>
+        <!-- Rangaistusalue (40.32m × 16.5m → 166×94px) -->
+        <rect x="67" y="216" width="166" height="94" fill="none" stroke="rgba(255,255,255,0.45)" stroke-width="1.5"/>
+        <!-- Maalialue (18.32m × 5.5m → 76×31px) -->
+        <rect x="112" y="279" width="76" height="31" fill="none" stroke="rgba(255,255,255,0.45)" stroke-width="1.5"/>
+        <!-- Rangaistuslaukkauspiste (11m → 63px maalilinjasta) -->
+        <circle cx="150" cy="247" r="2" fill="rgba(255,255,255,0.4)"/>
+        <!-- Kulmakaarit, alaosa -->
+        <path d="M14,310 A4,4 0 0 0 10,306"   fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="1.2"/>
+        <path d="M290,306 A4,4 0 0 0 286,310" fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="1.2"/>
         <!-- Vyöhyketekstit -->
-        <text x="14" y="28"  fill="rgba(255,255,255,0.2)" font-size="8" font-family="system-ui,sans-serif">HYÖ</text>
-        <text x="14" y="115" fill="rgba(255,255,255,0.2)" font-size="8" font-family="system-ui,sans-serif">KK</text>
-        <text x="14" y="175" fill="rgba(255,255,255,0.2)" font-size="8" font-family="system-ui,sans-serif">PUO</text>
-        <text x="14" y="257" fill="rgba(255,255,255,0.2)" font-size="8" font-family="system-ui,sans-serif">MV</text>
+        <text x="13" y="27"  fill="rgba(255,255,255,0.2)" font-size="7" font-family="system-ui,sans-serif">HYÖ</text>
+        <text x="13" y="140" fill="rgba(255,255,255,0.2)" font-size="7" font-family="system-ui,sans-serif">KK</text>
+        <text x="13" y="210" fill="rgba(255,255,255,0.2)" font-size="7" font-family="system-ui,sans-serif">PUO</text>
+        <text x="13" y="302" fill="rgba(255,255,255,0.2)" font-size="7" font-family="system-ui,sans-serif">MV</text>
       </svg>
     </div>
     <div id="field-bench" style="display:none" class="bench-side">
@@ -483,8 +483,10 @@ function toggleStatus(id) {
 
 function changePos(id, pos) {
   state.lineup[id].position = pos;
-  // Keep x, move to new zone's y
-  if (state.lineup[id].x !== null) state.lineup[id].y = POS_Y[pos] ?? 50;
+  if (state.lineup[id].x !== null) {
+    state.lineup[id].y = POS_Y[pos] ?? 50;
+    if (pos === 'mv') state.lineup[id].x = 50; // mv aina keskelle
+  }
   renderField();
 }
 
