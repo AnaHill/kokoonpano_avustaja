@@ -1,67 +1,50 @@
-# Backlog
-- [ ] kokoonpano ja kenttäkuva olisivat vierekkäin; kokoonpano vasemmalla puolella. 
-- [ ] kenttäkuvassa näytä koko nimi olisi oletus, sukunimi sitten valintana erikseen
-- [ ] voi ottaa kuvan ja lähettää sen eteenpäin kokoonpanosta tai muuten jakaa tämän helposti
+# Kokoonpanoavustaja
 
-# Julkaisu
+Selainpohjainen työkalu jalkapallojoukkueen kokoonpanon suunnitteluun. Toimii suoraan selaimessa ilman asennuksia — avaa `index.html`.
+
+## Tiedostot
+
+| Tiedosto | Kuvaus |
+|---|---|
+| `index.html` | Sovellus — ei tarvitse muokata |
+| `players.js` | Pelaajadata ja joukkueasetukset — muokkaa tätä |
+
+## Käyttö
+
+1. Valitse joukkue ylhäältä (esimerkkissä Vihreä / Keltainen / Kaikki, määritä `players.js` tiedostossa)
+2. **Pelaajat**-listassa merkitse ketkä ovat paikalla — "Poista kokoonpanosta" / "Lisää kokoonpanoon"
+3. **Kokoonpano**-listassa vaihda pelipaikkoja tarvittaessa, tai merkitse pelaaja vaihtoon
+4. **Kenttäkuva** päivittyy automaattisesti — vedä pelaajia halutuille paikoille
+5. "Kopioi kuva" tallentaa kenttäkuvan leikepöydälle jaettavaksi (vaatii nettiyhteyden)
+
+## Pelaajadatan muokkaus (`players.js`)
+
+```js
+const CONFIG = {
+  teams: ['vihreä', 'keltainen'],  // joukkueet — lisää ja muokkaa vapaasti
+  positions: { mv: 'MV', p: 'P', kk: 'KK', h: 'H' },
+};
+
+const PLAYERS = [
+  { number: 10, name: 'Etunimi Sukunimi', position: 'mv', team: 'vihreä' },
+  // ...
+];
+```
+
+Pelipaikkakoodit: `mv` = maalivahti, `p` = puolustaja, `kk` = keskikenttä, `h` = hyökkääjä
+
+## Julkaisu ja players.js-hallinta
+
 ```bash
+# Ensimmäinen julkaisu
 git add index.html players.js readme.md
 git commit -m "Initial commit"
 git remote add origin https://github.com/AnaHill/kokoonpano_avustaja.git
 git push -u origin master
-# git jättää paikalliset muutokset huomiotta vaikka tiedosto on repossa.
+
+# Jätä paikalliset muutokset players.js:ssä committaamatta (oikeat nimet pysyvät omalla koneella)
 git update-index --skip-worktree players.js
 
-# jos haluat takaisin trackattavaksi
+# Palauta seuranta tarvittaessa
 git update-index --no-skip-worktree players.js
-
 ```
-
-# Kokoonpanoavustaja
-Ohje agentille:
-> lue readme.md, analysoi ja ehdota toteutus. Parempi palastella pieniä toteutuksia alkuun, mutta huomioida laajennettavuus esim vältä syväkoodattuja arvoja vaan mahdollista joustava päivittäminen
-
-
-
-Yksinkertainen html(tai muu?) pohjainen avustaja, jonka avulla voi suunnitella kokoonpanon otteluun
-
-Tarve toimia lähinnä omalla koneella, helpoiten niin että kukin lataa omalla. 
-Mutta ei pitäisi joutua asentelemaan softia tms
-
-Toteutus pitäisi olla yksinkertainen ja joustava
-- pelaajaluettelo yksinkertaisessa helposti editoitavassa muodossa kuten markdown tiedosto tms
-  - muutama sarake joka esitelty `## Pelaajaluettelo esimerkki` kohdassa
-
-Kohta1: Drop-down tai muu jolla voi valita joukkueen (alussa 2 vaihtoehtoa Keltainen ja Vihreä tai "kaikki", mutta myöhemmin voi tulla lisääkin)
-
-Kohta2: Tämä tulostaisi interaktiivisen koko joukkueen pelaajaluettelon
-  - voit klikata poissa kohtaa -> pelaaja yliviivataan ja laitetaan listauksen loppuun
-  - mukana kohta -> pelaaja siirtyy tuonne Kohta3:n
-  - mukana kohta sisältäisi myös "valitse kaikki" jolloin saan kaikki aktiiviseksi, voin sitten poistella yksittäisiä pelureita
-
-Kohta3: peliin pääsevät pelurit, toisin sanoen kokoonpano
-- Edellisen vieressä oleva listaus pelureista jotka pelissä mukana
-- jokaisella on oletusvalintana pelipaikka joka asettu tuolla pelaajaluettelossa (katso `## Pelaajaluettelo esimerkki` )
-- drop-downilla voi valita pelaajan paikan
-- vaihtoehdot ovat: mv, p, kk, h (maalivahti, puolustaja, keskikenttä, hyökkääjä)
-- lisäksi erillinen vaihtoehto "aloittaa vaihdossa"
-
-Kohta 4: Kohta3:n valintojen perusteella olisi yksikertainen pelipaikka esitys, missä voi vielä hiirellä raahaamalla siirtäää esim vasen pakki oikealla, tai keskikentälle tms. Ja samalla päivittää Kohta3:n valinnat
-
-
- 
-
-
-
-
-## Tarve
-
-
-
-## Pelaajaluettelo esimerkki
-Pelaajalista voisi olla tyyliin
-
-pelinumero nimi pelipaikka joukkue
-
-2 Jouko Virta p keltainen
-4 Janne Mäkelä kk vihreä
