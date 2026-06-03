@@ -185,15 +185,19 @@
 
 <script>
 // ── Color palette (indexed by team position in CONFIG.teams) ─────
-const TEAM_COLORS = [
-  { bg: '#fff3cd', color: '#7a5800', activeBg: '#c49a06', circle: '#c49a06' },
+// Fallback-paletti jos players.js:ssä ei ole CONFIG.colors
+const FALLBACK_COLORS = [
   { bg: '#d4edda', color: '#155724', activeBg: '#2d7a2d', circle: '#2d7a2d' },
+  { bg: '#fff3cd', color: '#7a5800', activeBg: '#c49a06', circle: '#c49a06' },
   { bg: '#cce5ff', color: '#004085', activeBg: '#0066cc', circle: '#2266cc' },
   { bg: '#f8d7da', color: '#721c24', activeBg: '#dc3545', circle: '#cc2233' },
 ];
 
 const teamIndex = Object.fromEntries(CONFIG.teams.map((t, i) => [t, i]));
-const tc = t => TEAM_COLORS[teamIndex[t] ?? 0] ?? TEAM_COLORS[0];
+const tc = t => {
+  const i = teamIndex[t] ?? 0;
+  return (CONFIG.colors?.[i]) ?? FALLBACK_COLORS[i % FALLBACK_COLORS.length];
+};
 
 // y% → position code (puolikenttä: hyökkääjät ylhäällä, MV alhaalla)
 const POS_Y = { mv: 88, p: 66, kk: 40, h: 13 };
@@ -367,7 +371,7 @@ function resolveCollisions(allPlayers, freeSet) {
 (function () {
   const style = document.createElement('style');
   CONFIG.teams.forEach((t, i) => {
-    const c = TEAM_COLORS[i % TEAM_COLORS.length];
+    const c = (CONFIG.colors?.[i]) ?? FALLBACK_COLORS[i % FALLBACK_COLORS.length];
     style.textContent += `
       .bt${i} { background:${c.bg}; color:${c.color}; }
       .team-btn[data-team="${CSS.escape(t)}"].active { background:${c.activeBg}; border-color:${c.activeBg}; color:white; }
