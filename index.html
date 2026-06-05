@@ -325,24 +325,40 @@ function getMukana()   { return getFiltered().filter(p => state.status[pid(p)] =
 function getOnField()  { return getMukana().filter(p => !state.lineup[pid(p)].isSubstitute); }
 function getSubs()     { return getMukana().filter(p =>  state.lineup[pid(p)].isSubstitute); }
 
-// Assign default x/y to players that don't have one yet, then resolve collisions
+// Assign default x/y. Large groups are split into rows (max 5/row) to avoid crowding.
 function ensurePositions(players) {
   const byPos = {};
   const newPids = new Set();
   players.forEach(p => { const pos = state.lineup[pid(p)].position; (byPos[pos] = byPos[pos] || []).push(p); });
+
   Object.entries(byPos).forEach(([pos, group]) => {
-    const y = POS_Y[pos] ?? 50;
-    const n = group.length;
-    const margin = 18;
+    const baseY = POS_Y[pos] ?? 50;
+    const margin = 16;
+    const MAX_ROW = 5;
+    const numRows = Math.ceil(group.length / MAX_ROW);
+    const rowGap = 9; // % y-väli rivien välillä
+
     group.forEach((p, i) => {
       if (state.lineup[pid(p)].x === null) {
-        const x = pos === 'mv' ? 50 : (n === 1 ? 50 : margin + ((100 - 2 * margin) / (n - 1)) * i);
-        state.lineup[pid(p)].x = Math.round(x);
+        const row = Math.floor(i / MAX_ROW);
+        const col  = i % MAX_ROW;
+        const rowSize = Math.min(MAX_ROW, group.length - row * MAX_ROW);
+
+        // Rivit keskitetty baseY:n ympärille
+        const yOffset = (row - (numRows - 1) / 2) * rowGap;
+        const y = Math.round(Math.max(8, Math.min(92, baseY + yOffset)));
+
+        const x = pos === 'mv' ? 50
+                : rowSize === 1 ? 50
+                : Math.round(margin + ((100 - 2 * margin) / (rowSize - 1)) * col);
+
+        state.lineup[pid(p)].x = x;
         state.lineup[pid(p)].y = y;
         newPids.add(pid(p));
       }
     });
   });
+
   if (newPids.size > 0) resolveCollisions(players, newPids);
 }
 
