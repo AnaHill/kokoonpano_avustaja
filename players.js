@@ -10,7 +10,17 @@
 
 const CONFIG = {
   // Joukkuevaihtoehdot — lisää tai muuta vapaasti
-  teams: ['keltainen', 'vihreä'],
+  teams: ['vihreä', 'keltainen'],
+
+  // Joukkueiden värit samassa järjestyksessä kuin teams-lista.
+  //   circle  = pelaajatokenin väri kentällä
+  //   activeBg = joukkuenappi aktiivisena
+  //   bg/color = nimibadjin taustaväri ja tekstiväri
+  // Voi jättää pois → käytetään oletuspalettia (vihreä, keltainen, sininen, punainen)
+  colors: [
+    { circle: '#2d7a2d', activeBg: '#2d7a2d', bg: '#d4edda', color: '#155724' }, // vihreä
+    { circle: '#c49a06', activeBg: '#c49a06', bg: '#fff3cd', color: '#7a5800' }, // keltainen
+  ],
 
   // Pelipaikkakoodien lyhenteet
   positions: {
