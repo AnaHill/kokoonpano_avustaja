@@ -51,6 +51,10 @@ Värikenttien selitykset:
 - `activeBg` — joukkuenappi aktiivisena
 - `bg` / `color` — nimibadjin taustaväri ja tekstiväri
 
+## Ideoita jatkokehitykseen
+
+- **Kompaktimpi pelaajatokeni kenttäkuvassa** — nykyinen ympyrä + nimi vie paljon tilaa. Matala suorakaide (esim. 48×18px) jossa pelipaikka ja sukunimi samalla rivillä (`P Mäkinen`) mahtuisi ahtaammillekin kentille siistimmin. Muoto ei itsessään ratkaise tilanahtautta — se vaatisi myös pienempää fonttia ja tokenia.
+
 ## Julkaisu ja players.js-hallinta
 
 ```bash
