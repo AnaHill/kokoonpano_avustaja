@@ -35,6 +35,9 @@
 
     table { width: 100%; border-collapse: collapse; font-size: 0.83rem; }
     thead th { text-align: left; padding: 5px 7px; background: #f7f7f7; border-bottom: 2px solid #eee; font-size: 0.7rem; color: #aaa; text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap; }
+    thead th.sortable { cursor: pointer; user-select: none; }
+    thead th.sortable:hover { background: #efefef; color: #666; }
+    thead th.sort-active { color: #333; }
     tbody tr { border-bottom: 1px solid #f2f2f2; }
     tbody tr:last-child { border-bottom: none; }
     tbody tr:hover { background: #fafafa; }
@@ -119,7 +122,7 @@
     <span class="count" id="count"></span>
   </div>
   <table>
-    <thead><tr><th>#</th><th>Nimi</th><th>Paikka</th><th>Joukkue</th><th>Tila</th><th></th></tr></thead>
+    <thead id="player-thead"></thead>
     <tbody id="player-list"></tbody>
   </table>
 </div>
@@ -127,7 +130,10 @@
 <div class="s34">
   <!-- Section 3: Kokoonpano -->
   <div class="card s34-lineup">
-    <div class="card-title">Kokoonpano</div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+      <span class="card-title" style="margin:0">Kokoonpano</span>
+      <button id="copy-lineup-btn" class="btn" style="margin-left:auto;background:#f0f2f5;border-color:#ddd;color:#555" onclick="copyLineup()">Kopioi pelaajalista</button>
+    </div>
     <div id="lineup-summary" style="font-size:0.75rem;color:#888;margin-bottom:8px;min-height:1em"></div>
     <table class="lineup-table">
       <thead><tr><th>#</th><th>Nimi</th><th>Pelipaikka</th><th></th></tr></thead>
@@ -230,6 +236,8 @@ function nameHtml(name) {
 const state = {
   team: 'kaikki',
   nameStyle: 'full', // 'full' | 'last'
+  sortBy:  'number', // 'number' | 'name' | 'position' | 'team'
+  sortDir: 'asc',    // 'asc' | 'desc'
   status:  Object.fromEntries(PLAYERS.map(p => [pid(p), 'mukana'])),
   lineup:  Object.fromEntries(PLAYERS.map(p => [pid(p), { position: p.position, isSubstitute: false, x: null, y: null }])),
 };
@@ -243,6 +251,27 @@ function toggleNameStyle() {
   document.getElementById('name-toggle').textContent = state.nameStyle === 'full' ? 'Näytä sukunimi' : 'Näytä koko nimi';
   renderField();
   saveState();
+}
+
+async function copyLineup() {
+  const btn = document.getElementById('copy-lineup-btn');
+  const orig = btn.textContent;
+  const players = [...getMukana()].sort((a, b) => a.number - b.number);
+  const text = '*#\tNIMI*\n' + '─'.repeat(16) + '\n' + players.map(p => `${p.number}\t${p.name}`).join('\n');
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch {
+    // Fallback vanhemmille selaimille
+    const ta = Object.assign(document.createElement('textarea'), {
+      value: text, style: 'position:fixed;opacity:0'
+    });
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+  }
+  btn.textContent = 'Kopioitu ✓';
+  setTimeout(() => { btn.textContent = orig; }, 2000);
 }
 
 async function copyFieldImage() {
@@ -390,11 +419,46 @@ function renderTeams() {
     ).join('');
 }
 
+// ── Lajittelu ─────────────────────────────────────────────────────
+function sortedPlayers(arr) {
+  const dir = state.sortDir === 'asc' ? 1 : -1;
+  return [...arr].sort((a, b) => {
+    let va, vb;
+    if      (state.sortBy === 'name')     { va = a.name;     vb = b.name; }
+    else if (state.sortBy === 'position') { va = a.position; vb = b.position; }
+    else if (state.sortBy === 'team')     { va = a.team;     vb = b.team; }
+    else                                  { va = a.number;   vb = b.number; }
+    return va < vb ? -dir : va > vb ? dir : 0;
+  });
+}
+
+function toggleSort(col) {
+  if (state.sortBy === col) {
+    state.sortDir = state.sortDir === 'asc' ? 'desc' : 'asc';
+  } else {
+    state.sortBy = col;
+    state.sortDir = 'asc';
+  }
+  renderPlayers();
+  saveState();
+}
+
+function sortArrow(col) {
+  if (state.sortBy !== col) return '<span style="opacity:0.25">⇅</span>';
+  return state.sortDir === 'asc' ? '↑' : '↓';
+}
+
 // ── Render: Section 2 ────────────────────────────────────────────
 function renderPlayers() {
   const list = getFiltered();
-  const mukana = list.filter(p => state.status[pid(p)] === 'mukana');
-  const poissa  = list.filter(p => state.status[pid(p)] === 'poissa');
+  const mukana = sortedPlayers(list.filter(p => state.status[pid(p)] === 'mukana'));
+  const poissa  = sortedPlayers(list.filter(p => state.status[pid(p)] === 'poissa'));
+  const th = (col, label) => {
+    const active = state.sortBy === col;
+    return `<th class="sortable${active ? ' sort-active' : ''}" onclick="toggleSort('${col}')">${label} ${sortArrow(col)}</th>`;
+  };
+  document.getElementById('player-thead').innerHTML =
+    `<tr>${th('number','#')}${th('name','Nimi')}${th('position','Paikka')}${th('team','Joukkue')}<th>Tila</th><th></th></tr>`;
   document.getElementById('count').textContent = `${mukana.length} mukana · ${poissa.length} poissa`;
   document.getElementById('player-list').innerHTML = [...mukana, ...poissa].map(p => {
     const id = pid(p), out = state.status[id] === 'poissa', ti = teamIndex[p.team] ?? 0;
@@ -570,6 +634,8 @@ function loadState() {
     if (!saved) return;
     if (saved.team)      state.team      = saved.team;
     if (saved.nameStyle) state.nameStyle = saved.nameStyle;
+    if (saved.sortBy)    state.sortBy    = saved.sortBy;
+    if (saved.sortDir)   state.sortDir   = saved.sortDir;
     PLAYERS.forEach(p => {
       const id = pid(p);
       if (saved.status?.[id] !== undefined) state.status[id] = saved.status[id];
