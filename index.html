@@ -67,6 +67,18 @@
     .bench-chip { padding: 3px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; border: 1px solid #ffc107; cursor: pointer; }
     .bench-chip:hover { background: #ffc107 !important; color: #333 !important; }
     .lineup-empty { font-size: 0.82rem; color: #bbb; padding: 16px 0; text-align: center; }
+    .badge-laina { background: #e8f0fe; color: #1a5db0; font-size: 0.65rem; padding: 1px 5px; border-radius: 8px; font-weight: 700; margin-left: 3px; }
+
+    /* Lainapelaaja-paneeli */
+    .guest-panel { margin-top: 10px; padding: 10px; background: #f8f9ff; border-radius: 6px; border: 1px solid #d0d8f0; }
+    .guest-panel-title { font-size: 0.7rem; color: #888; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
+    .guest-group-label { font-size: 0.72rem; color: #aaa; margin: 6px 0 4px; font-weight: 600; }
+    .guest-row { display: flex; align-items: center; gap: 6px; padding: 3px 0; font-size: 0.82rem; }
+    .guest-row-name { flex: 1; }
+    .btn-guest-add { padding: 2px 9px; border-radius: 4px; border: none; cursor: pointer; font-size: 0.72rem; font-weight: 600; background: #d4edda; color: #155724; transition: all 0.12s; }
+    .btn-guest-add:hover { background: #28a745; color: white; }
+    .btn-guest-remove { padding: 2px 9px; border-radius: 4px; border: none; cursor: pointer; font-size: 0.72rem; font-weight: 600; background: #fde8ea; color: #b02a37; transition: all 0.12s; }
+    .btn-guest-remove:hover { background: #dc3545; color: white; }
 
     /* Section 4: Field */
     .field-and-bench { display: flex; gap: 14px; align-items: flex-start; flex-wrap: wrap; }
@@ -119,7 +131,12 @@
   <div class="card-title">Pelaajat</div>
   <div class="toolbar">
     <button class="btn btn-all" onclick="selectAll()">Lisää kaikki kokoonpanoon</button>
+    <button id="guest-toggle-btn" class="btn" style="background:#e8f0fe;border-color:#4a90d9;color:#1a5db0;display:none" onclick="toggleGuestPanel()">Lisää lainapelaaja</button>
     <span class="count" id="count"></span>
+  </div>
+  <div id="guest-panel" style="display:none" class="guest-panel">
+    <div class="guest-panel-title">Lainapelaajat — valitse toisesta joukkueesta</div>
+    <div id="guest-panel-list"></div>
   </div>
   <table>
     <thead id="player-thead"></thead>
@@ -238,6 +255,7 @@ const state = {
   nameStyle: 'full', // 'full' | 'last'
   sortBy:  'number', // 'number' | 'name' | 'position' | 'team'
   sortDir: 'asc',    // 'asc' | 'desc'
+  guestPids: [],     // lainapelaajien ID:t (näytetään vaikka eri joukkue valittuna)
   status:  Object.fromEntries(PLAYERS.map(p => [pid(p), 'mukana'])),
   lineup:  Object.fromEntries(PLAYERS.map(p => [pid(p), { position: p.position, isSubstitute: false, x: null, y: null }])),
 };
@@ -320,7 +338,11 @@ async function copyFieldImage() {
   }
 }
 
-function getFiltered() { return PLAYERS.filter(p => state.team === 'kaikki' || p.team === state.team); }
+function getFiltered() {
+  return PLAYERS.filter(p =>
+    state.team === 'kaikki' || p.team === state.team || state.guestPids.includes(pid(p))
+  );
+}
 function getMukana()   { return getFiltered().filter(p => state.status[pid(p)] === 'mukana'); }
 function getOnField()  { return getMukana().filter(p => !state.lineup[pid(p)].isSubstitute); }
 function getSubs()     { return getMukana().filter(p =>  state.lineup[pid(p)].isSubstitute); }
@@ -464,6 +486,65 @@ function sortArrow(col) {
   return state.sortDir === 'asc' ? '↑' : '↓';
 }
 
+// ── Lainapelaajat ─────────────────────────────────────────────────
+function toggleGuestPanel() {
+  const panel = document.getElementById('guest-panel');
+  const open = panel.style.display === 'none';
+  panel.style.display = open ? '' : 'none';
+  document.getElementById('guest-toggle-btn').textContent =
+    open ? 'Piilota lainapelaajat' : 'Lisää lainapelaaja';
+  if (open) renderGuestPanel();
+}
+
+function renderGuestPanel() {
+  const otherPlayers = PLAYERS.filter(p =>
+    p.team !== state.team && !state.guestPids.includes(pid(p)) ||
+    state.guestPids.includes(pid(p))
+  );
+  const byTeam = {};
+  otherPlayers.forEach(p => { (byTeam[p.team] = byTeam[p.team] || []).push(p); });
+
+  const html = Object.entries(byTeam).map(([team, players]) => {
+    const ti = teamIndex[team] ?? 0;
+    const rows = players
+      .filter(p => p.team !== state.team)
+      .sort((a, b) => a.number - b.number)
+      .map(p => {
+        const id = pid(p);
+        const isGuest = state.guestPids.includes(id);
+        return `<div class="guest-row">
+          <span class="guest-row-name">${p.number} ${p.name} <span class="badge bt${ti}">${p.team}</span></span>
+          ${isGuest
+            ? `<button class="btn-guest-remove" onclick="removeGuest('${id}')">Poista</button>`
+            : `<button class="btn-guest-add" onclick="addGuest('${id}')">+ Lisää</button>`}
+        </div>`;
+      }).join('');
+    return rows ? `<div class="guest-group-label">${team[0].toUpperCase() + team.slice(1)}</div>${rows}` : '';
+  }).join('');
+
+  document.getElementById('guest-panel-list').innerHTML = html || '<div style="color:#bbb;font-size:0.8rem">Ei muita joukkueita</div>';
+}
+
+function addGuest(id) {
+  if (!state.guestPids.includes(id)) {
+    state.guestPids.push(id);
+    state.status[id] = 'mukana';
+  }
+  renderGuestPanel();
+  renderPlayers(); renderLineup(); renderField();
+  saveState();
+}
+
+function removeGuest(id) {
+  state.guestPids = state.guestPids.filter(g => g !== id);
+  state.status[id] = 'mukana'; // nollataan tila
+  state.lineup[id].x = null;
+  state.lineup[id].y = null;
+  renderGuestPanel();
+  renderPlayers(); renderLineup(); renderField();
+  saveState();
+}
+
 // ── Render: Section 2 ────────────────────────────────────────────
 function renderPlayers() {
   const list = getFiltered();
@@ -476,11 +557,16 @@ function renderPlayers() {
   document.getElementById('player-thead').innerHTML =
     `<tr>${th('number','#')}${th('name','Nimi')}${th('position','Paikka')}${th('team','Joukkue')}<th>Tila</th><th></th></tr>`;
   document.getElementById('count').textContent = `${mukana.length} mukana · ${poissa.length} poissa`;
+  // Näytä/piilota lainapelaaja-nappi (ei relevantti "kaikki"-näkymässä)
+  const guestBtnEl = document.getElementById('guest-toggle-btn');
+  guestBtnEl.style.display = state.team === 'kaikki' ? 'none' : '';
+
   document.getElementById('player-list').innerHTML = [...mukana, ...poissa].map(p => {
     const id = pid(p), out = state.status[id] === 'poissa', ti = teamIndex[p.team] ?? 0;
+    const isGuest = state.guestPids.includes(id);
     return `<tr class="${out ? 'poissa' : ''}">
       <td>${p.number}</td>
-      <td class="pname">${p.name}</td>
+      <td class="pname">${p.name}${isGuest ? '<span class="badge-laina">Laina</span>' : ''}</td>
       <td><span class="badge badge-pos">${CONFIG.positions[p.position] ?? p.position}</span></td>
       <td><span class="badge bt${ti}">${p.team}</span></td>
       <td>${out ? '<span class="status-p">Poissa</span>' : '<span class="status-m">Mukana</span>'}</td>
@@ -652,6 +738,7 @@ function loadState() {
     if (saved.nameStyle) state.nameStyle = saved.nameStyle;
     if (saved.sortBy)    state.sortBy    = saved.sortBy;
     if (saved.sortDir)   state.sortDir   = saved.sortDir;
+    if (saved.guestPids) state.guestPids = saved.guestPids;
     PLAYERS.forEach(p => {
       const id = pid(p);
       if (saved.status?.[id] !== undefined) state.status[id] = saved.status[id];
@@ -708,6 +795,10 @@ function moveToStarter(id) {
 }
 
 function setTeam(team) {
+  // Tyhjennä lainapelaajat joukkuetta vaihtaessa
+  state.guestPids = [];
+  document.getElementById('guest-panel').style.display = 'none';
+  document.getElementById('guest-toggle-btn').textContent = 'Lisää lainapelaaja';
   state.team = team;
   PLAYERS.forEach(p => { state.lineup[pid(p)].x = null; state.lineup[pid(p)].y = null; });
   renderTeams(); renderPlayers(); renderLineup(); renderField();

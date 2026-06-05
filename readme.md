@@ -14,6 +14,7 @@ Selainpohjainen työkalu jalkapallojoukkueen kokoonpanon suunnitteluun. Toimii s
 1. Valitse joukkue ylhäältä (Vihreä / Keltainen / Kaikki — määritelty `players.js`:ssä)
 2. **Pelaajat**-listassa merkitse ketkä ovat paikalla — "Poista kokoonpanosta" / "Lisää kokoonpanoon"
    - Sarakeotsikoita klikkaamalla voi lajitella numeron, nimen, paikan tai joukkueen mukaan (↑↓)
+   - "Lisää lainapelaaja" lisää yksittäisiä pelaajia toisesta joukkueesta (näkyy **Laina**-merkinnällä)
 3. **Kokoonpano**-listassa vaihda pelipaikkoja tarvittaessa tai merkitse pelaaja vaihtoon
    - Yhteenveto näyttää montako kentällä ja pelipaikkajakauman
    - "Kopioi pelaajalista" kopioi WhatsApp-yhteensopivan listan leikepöydälle
