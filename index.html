@@ -101,7 +101,7 @@
       width: 34px; height: 34px; border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
       font-size: 0.58rem; font-weight: 800; color: white;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.45); border: 2px solid rgba(255,255,255,0.5);
+      box-shadow: 0 2px 5px rgba(0,0,0,0.45); border: 3px solid rgba(255,255,255,0.5);
       text-transform: uppercase;
     }
     .fp-name { margin-top: 2px; font-size: 0.58rem; color: white; text-shadow: 0 1px 3px rgba(0,0,0,0.9); font-weight: 700; max-width: 72px; text-align: center; line-height: 1.25; }
@@ -655,7 +655,7 @@ function renderField() {
     el.style.left = ent.x + '%';
     el.style.top  = ent.y + '%';
     el.innerHTML = `
-      <div class="fp-circle" style="background:${c.circle}">${posLabel}</div>
+      <div class="fp-circle" style="background:${c.circle};border-color:${c.stroke||'rgba(255,255,255,0.5)'};color:${c.tokenColor||'white'}">${posLabel}</div>
       <div class="fp-name">${nameHtml(p.name)}</div>`;
     el.addEventListener('pointerdown', startDrag);
     field.appendChild(el);
