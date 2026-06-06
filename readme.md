@@ -2,6 +2,8 @@
 
 Selainpohjainen työkalu jalkapallojoukkueen kokoonpanon suunnitteluun. Toimii suoraan selaimessa ilman asennuksia — avaa `index.html`.
 
+**Demo:** https://anahill.github.io/kokoonpano_avustaja/
+
 ## Tiedostot
 
 | Tiedosto | Kuvaus |
@@ -11,7 +13,7 @@ Selainpohjainen työkalu jalkapallojoukkueen kokoonpanon suunnitteluun. Toimii s
 
 ## Käyttö
 
-1. Valitse joukkue ylhäältä (Vihreä / Keltainen / Kaikki — määritelty `players.js`:ssä)
+1. Valitse joukkue ylhäältä (määritelty `players.js`:ssä)
 2. **Pelaajat**-listassa merkitse ketkä ovat paikalla — "Poista kokoonpanosta" / "Lisää kokoonpanoon"
    - Sarakeotsikoita klikkaamalla voi lajitella numeron, nimen, paikan tai joukkueen mukaan (↑↓)
    - "Lisää lainapelaaja" lisää yksittäisiä pelaajia toisesta joukkueesta (näkyy **Laina**-merkinnällä)
@@ -28,29 +30,43 @@ Selainpohjainen työkalu jalkapallojoukkueen kokoonpanon suunnitteluun. Toimii s
 
 ```js
 const CONFIG = {
-  teams: ['vihreä', 'keltainen'],  // joukkueet — lisää ja muokkaa vapaasti
+  teams: ['Joukkue 1', 'Joukkue 2'],  // joukkueet — lisää ja muokkaa vapaasti
 
   // Värit samassa järjestyksessä kuin teams. Voi jättää pois → oletuspaletti.
   colors: [
-    { circle: '#2d7a2d', activeBg: '#2d7a2d', bg: '#d4edda', color: '#155724' },
-    { circle: '#c49a06', activeBg: '#c49a06', bg: '#fff3cd', color: '#7a5800' },
+    {
+      circle: '#ffffff',      // pelaajatokenin täyttöväri kentällä
+      stroke: '#1565c0',      // tokenin reunaväri (valinnainen)
+      tokenColor: '#1565c0',  // teksti tokenin sisällä (valinnainen, oletus: valkoinen)
+      activeBg: '#1565c0',    // joukkuenappi aktiivisena
+      bg: '#e8f0fe',          // nimibadjin taustaväri
+      color: '#0d47a1',       // nimibadjin tekstiväri
+    },
+    { circle: '#003087', stroke: '#ffffff', tokenColor: '#ffffff',
+      activeBg: '#003087', bg: '#cce0ff', color: '#001a66' },
   ],
 
   positions: { mv: 'MV', p: 'P', kk: 'KK', h: 'H' },
 };
 
 const PLAYERS = [
-  { number: 10, name: 'Etunimi Sukunimi', position: 'mv', team: 'vihreä' },
+  { number: 10, name: 'Etunimi Sukunimi', position: 'mv', team: 'Joukkue 1' },
   // ...
 ];
 ```
 
 Pelipaikkakoodit: `mv` = maalivahti, `p` = puolustaja, `kk` = keskikenttä, `h` = hyökkääjä
 
-Värikenttien selitykset:
-- `circle` — pelaajatokenin väri kentällä
-- `activeBg` — joukkuenappi aktiivisena
-- `bg` / `color` — nimibadjin taustaväri ja tekstiväri
+### Värikenttien selitykset
+
+| Kenttä | Kuvaus | Pakollinen |
+|---|---|---|
+| `circle` | Pelaajatokenin täyttöväri kentällä | kyllä |
+| `stroke` | Tokenin reunaväri | ei (oletus: läpinäkyvä) |
+| `tokenColor` | Teksti tokenin sisällä | ei (oletus: valkoinen) |
+| `activeBg` | Joukkuenappi aktiivisena | kyllä |
+| `bg` | Nimibadjin taustaväri | kyllä |
+| `color` | Nimibadjin tekstiväri | kyllä |
 
 ## Ideoita jatkokehitykseen
 
@@ -62,12 +78,15 @@ Värikenttien selitykset:
 # Ensimmäinen julkaisu
 git add index.html players.js readme.md
 git commit -m "Initial commit"
-git remote add origin https://github.com/AnaHill/kokoonpano_avustaja.git
+git remote add origin https://github.com/KAYTTAJATUNNUS/kokoonpano_avustaja.git
 git push -u origin master
+
+# GitHub Pages: Settings → Pages → Branch: master / (root) → Save
+# Sivu julkaistaan osoitteeseen https://KAYTTAJATUNNUS.github.io/kokoonpano_avustaja/
 
 # Jätä paikalliset muutokset players.js:ssä committaamatta (oikeat nimet pysyvät omalla koneella)
 git update-index --skip-worktree players.js
 
-# Palauta seuranta tarvittaessa
+# Palauta seuranta tarvittaessa (esim. ennen julkaisua)
 git update-index --no-skip-worktree players.js
 ```
